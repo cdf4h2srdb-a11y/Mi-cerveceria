@@ -1,0 +1,15 @@
+MI CERVECERÍA — versión inicial
+
+CONTENIDO
+- index.html: aplicación.
+- manifest.webmanifest: configuración instalable.
+- sw.js: caché para uso sin conexión después de la primera visita.
+- icon.svg: icono.
+
+INSTALACIÓN EN IPHONE
+Para que Safari ofrezca “Añadir a pantalla de inicio” como aplicación PWA, los archivos deben estar publicados en una dirección HTTPS.
+Una opción sencilla es crear un repositorio en GitHub, subir estos archivos a la raíz y activar Settings > Pages > Deploy from a branch.
+Luego abre la URL HTTPS en Safari > Compartir > Añadir a pantalla de inicio.
+
+ALMACENAMIENTO
+Los datos se guardan en localStorage del navegador de ese dispositivo. No hay cuenta ni sincronización en nube. Usa Datos > Exportar respaldo regularmente. Si borras datos del sitio/navegador, podrías perderlos.

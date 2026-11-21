@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#24170f">
+<title>Mi Cervecería</title>
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root{--bg:#f5f1eb;--card:#fff;--ink:#24170f;--muted:#786b60;--gold:#bd7b2c;--line:#e8dfd5;--green:#476b4b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding-bottom:88px}
+header{background:linear-gradient(135deg,#24170f,#56351d);color:#fff;padding:24px 18px 20px;border-radius:0 0 22px 22px}
+header .eyebrow{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:#e5c59c}h1{font-size:27px;margin:5px 0 4px}header p{margin:0;color:#eadbca;font-size:14px}
+main{max-width:760px;margin:auto;padding:16px}
+nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:9px 4px calc(9px + env(safe-area-inset-bottom));z-index:10}
+nav button{border:0;background:none;color:var(--muted);font-size:11px;padding:5px 8px;display:flex;flex-direction:column;align-items:center;gap:3px}
+nav button.active{color:var(--gold);font-weight:700}nav b{font-size:20px;line-height:22px}
+.view{display:none}.view.active{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:15px;margin:12px 0;box-shadow:0 2px 8px #38200a08}
+.row{display:flex;gap:10px;align-items:center}.between{justify-content:space-between}.grow{flex:1;min-width:0}
+h2{font-size:20px;margin:8px 0 12px}h3{font-size:16px;margin:0 0 8px}.muted{color:var(--muted);font-size:13px}.big{font-size:26px;font-weight:750}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.stat{background:#fbf7f1;border-radius:12px;padding:12px}.stat strong{display:block;font-size:22px}
+button,.btn{cursor:pointer;border:0;border-radius:11px;padding:11px 14px;background:var(--ink);color:#fff;font-weight:650;font-size:14px}
+button.secondary,.btn.secondary{background:#f0e8de;color:var(--ink)}button.gold{background:var(--gold)}button.danger{background:#a43f35}
+input,select,textarea{width:100%;border:1px solid #d9cec2;border-radius:10px;padding:11px 12px;background:#fff;color:var(--ink);font:inherit;margin:5px 0 11px}
+label{font-size:13px;font-weight:650;color:#5c4b3d;display:block}textarea{min-height:70px;resize:vertical}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.item{border-bottom:1px solid var(--line);padding:12px 0}.item:last-child{border:0}.pill{display:inline-block;border-radius:30px;background:#f3e7d7;color:#80501f;padding:4px 9px;font-size:11px;font-weight:700}
+.empty{text-align:center;padding:30px 15px;color:var(--muted)}.section-title{display:flex;align-items:center;justify-content:space-between;margin-top:18px}
+.smallbtn{padding:7px 10px;font-size:12px}.ingredient-row{display:grid;grid-template-columns:1.5fr .7fr .7fr auto;gap:6px;align-items:center}.ingredient-row input{margin:3px 0;padding:9px 7px;font-size:13px}
+hr{border:0;border-top:1px solid var(--line);margin:14px 0}
+#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#24170f;color:#fff;padding:10px 15px;border-radius:20px;font-size:13px;display:none;z-index:20;max-width:90%}
+@media(min-width:650px){.stats{grid-template-columns:repeat(4,1fr)}}
+</style>
+</head>
+<body>
+<header><div class="eyebrow">Tu cuaderno cervecero</div><h1>🍺 Mi Cervecería</h1><p>Recetas, lotes y fermentaciones en un solo lugar.</p></header>
+<main>
+<section id="inicio" class="view active">
+ <div class="section-title"><h2>Resumen</h2><span class="pill">Guardado en este dispositivo</span></div>
+ <div class="stats">
+  <div class="stat"><span class="muted">Recetas</span><strong id="statRecipes">0</strong></div>
+  <div class="stat"><span class="muted">Lotes</span><strong id="statBatches">0</strong></div>
+  <div class="stat"><span class="muted">En proceso</span><strong id="statActive">0</strong></div>
+  <div class="stat"><span class="muted">Estilos</span><strong id="statStyles">0</strong></div>
+ </div>
+ <div class="card"><h3>Accesos rápidos</h3><div class="actions"><button class="gold" onclick="newRecipe()">＋ Nueva receta</button><button class="secondary" onclick="newBatch()">＋ Registrar lote</button></div></div>
+ <div class="card"><h3>Actividad reciente</h3><div id="recent" class="muted">Todavía no hay registros. Crea tu primera receta.</div></div>
+ <div class="card"><h3>Consejo</h3><p class="muted">Registra la densidad y temperatura cada día. Con esos datos podrás comparar la fermentación real entre lotes.</p></div>
+</section>
+
+<section id="recetas" class="view">
+ <div class="section-title"><h2>Mis recetas</h2><button class="gold smallbtn" onclick="newRecipe()">＋ Crear</button></div>
+ <div id="recipeList"></div>
+</section>
+
+<section id="lotes" class="view">
+ <div class="section-title"><h2>Mis lotes</h2><button class="gold smallbtn" onclick="newBatch()">＋ Registrar</button></div>
+ <div id="batchList"></div>
+</section>
+
+<section id="calculadora" class="view">
+ <h2>Calculadora cervecera</h2>
+ <div class="card">
+  <h3>Alcohol estimado (ABV)</h3>
+  <div class="grid2"><div><label>OG</label><input id="og" type="number" step="0.001" value="1.055"></div><div><label>FG</label><input id="fg" type="number" step="0.001" value="1.012"></div></div>
+  <div class="row between"><span class="muted">ABV aproximado</span><strong class="big" id="abv">5,6%</strong></div>
+ </div>
+ <div class="card">
+  <h3>Carbonatación orientativa</h3>
+  <div class="grid2"><div><label>Temperatura cerveza (°C)</label><input id="temp" type="number" value="2" step=".5"></div><div><label>CO₂ deseado (volúmenes)</label><input id="vol" type="number" value="2.5" step=".1"></div></div>
+  <div class="row between"><span class="muted">Presión aproximada</span><strong class="big" id="psi">11,5 PSI</strong></div>
+  <p class="muted">Estimación para carbonatación en equilibrio. Verifica con una tabla fiable y considera la altitud, el sistema y la temperatura real del líquido.</p>
+ </div>
+ <div class="card">
+  <h3>Conversión de °Brix a densidad (mosto sin fermentar)</h3>
+  <label>Lectura °Brix</label><input id="brix" type="number" value="12" step=".1">
+  <div class="row between"><span class="muted">Densidad específica estimada</span><strong class="big" id="sg">1.048</strong></div>
+  <p class="muted">En mosto fermentado, el refractómetro requiere corrección por alcohol. Esta conversión simple no sirve directamente después de fermentar.</p>
+ </div>
+</section>
+
+<section id="ajustes" class="view">
+ <h2>Datos y respaldo</h2>
+ <div class="card"><h3>Respaldo de tus datos</h3><p class="muted">Tus recetas y lotes se guardan localmente en el navegador de este iPhone. Exporta un respaldo periódicamente.</p>
+ <div class="actions"><button class="gold" onclick="exportData()">Exportar respaldo</button><button class="secondary" onclick="document.getElementById('importFile').click()">Importar respaldo</button><input id="importFile" type="file" accept=".json,application/json" hidden onchange="importData(event)"></div></div>
+ <div class="card"><h3>Privacidad</h3><p class="muted">Los datos no se envían a un servidor ni se sincronizan con otros dispositivos. Si borras los datos del navegador, puedes perderlos; conserva tu archivo de respaldo.</p></div>
+ <div class="card"><h3>Instalar en iPhone</h3><ol class="muted"><li>Publica esta carpeta en un sitio HTTPS (por ejemplo, GitHub Pages).</li><li>Abre la dirección en Safari.</li><li>Toca Compartir → Añadir a pantalla de inicio.</li><li>Ábrela desde el nuevo icono. Puede funcionar sin conexión después de la primera carga.</li></ol></div>
+ <div class="actions"><button class="danger" onclick="clearData()">Borrar todos mis datos</button></div>
+</section>
+</main>
+<nav>
+ <button class="active" data-tab="inicio" onclick="showTab('inicio',this)"><b>⌂</b>Inicio</button>
+ <button data-tab="recetas" onclick="showTab('recetas',this)"><b>▤</b>Recetas</button>
+ <button data-tab="lotes" onclick="showTab('lotes',this)"><b>♨</b>Lotes</button>
+ <button data-tab="calculadora" onclick="showTab('calculadora',this)"><b>∑</b>Cálculos</button>
+ <button data-tab="ajustes" onclick="showTab('ajustes',this)"><b>⚙</b>Datos</button>
+</nav>
+<div id="toast"></div>
+<script>
+const KEY='miCerveceria_v1';
+let db=JSON.parse(localStorage.getItem(KEY)||'{"recipes":[],"batches":[]}');
+let editingRecipe=null, editingBatch=null;
+const $=id=>document.getElementById(id);
+function save(){localStorage.setItem(KEY,JSON.stringify(db));render()}
+function toast(s){let t=$('toast');t.textContent=s;t.style.display='block';setTimeout(()=>t.style.display='none',2400)}
+function showTab(id,btn){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));$(id).classList.add('active');document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));(btn||document.querySelector('nav [data-tab="'+id+'"]')).classList.add('active');render()}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function recipeForm(r={}) {
+ const isEdit=!!r.id; editingRecipe=r.id||null;
+ $('recetas').innerHTML=`<div class="section-title"><h2>${isEdit?'Editar receta':'Nueva receta'}</h2><button class="secondary smallbtn" onclick="showTab('recetas')">Volver</button></div>
+ <div class="card"><label>Nombre de la receta</label><input id="rname" value="${esc(r.name||'')}" placeholder="Ej. NEIPA Galaxy #01">
+ <div class="grid2"><div><label>Estilo</label><input id="rstyle" value="${esc(r.style||'')}" placeholder="NEIPA"></div><div><label>Volumen final (L)</label><input id="rvol" type="number" value="${r.volume??20}"></div></div>
+ <div class="grid2"><div><label>OG objetivo</label><input id="rog" type="number" step=".001" value="${r.og??1.060}"></div><div><label>FG objetivo</label><input id="rfg" type="number" step=".001" value="${r.fg??1.012}"></div></div>
+ <div class="grid2"><div><label>IBU objetivo</label><input id="ribu" type="number" value="${r.ibu??0}"></div><div><label>Levadura</label><input id="ryeast" value="${esc(r.yeast||'')}" placeholder="Marca / cepa"></div></div>
+ <label>Notas de proceso</label><textarea id="rnotes" placeholder="Maceración, hervor, temperaturas...">${esc(r.notes||'')}</textarea></div>
+ <div class="card"><div class="row between"><h3>Ingredientes</h3><button class="secondary smallbtn" onclick="addIngredient()">＋ Agregar</button></div><div id="ingredients"></div></div>
+ <div class="actions"><button class="gold" onclick="saveRecipe()">Guardar receta</button><button class="secondary" onclick="showTab('recetas')">Cancelar</button></div>`;
+ (r.ingredients||[]).forEach(addIngredient);
+}
+function addIngredient(v={name:'',amount:'',unit:'g'}){let wrap=$('ingredients'),d=document.createElement('div');d.className='ingredient-row';d.innerHTML=`<input placeholder="Ingrediente" value="${esc(v.name)}"><input type="number" step=".1" placeholder="Cant." value="${esc(v.amount)}"><select><option ${v.unit==='g'?'selected':''}>g</option><option ${v.unit==='kg'?'selected':''}>kg</option><option ${v.unit==='g/L'?'selected':''}>g/L</option><option ${v.unit==='ml'?'selected':''}>ml</option><option ${v.unit==='L'?'selected':''}>L</option><option ${v.unit==='un'?'selected':''}>un</option></select><button class="secondary smallbtn" onclick="this.parentElement.remove()">×</button>`;wrap.appendChild(d)}
+function newRecipe(){recipeForm();showTab('recetas')}
+function saveRecipe(){let name=$('rname').value.trim();if(!name){toast('Escribe un nombre para la receta');return}
+ let ingredients=[...$('ingredients').children].map(d=>({name:d.children[0].value,amount:d.children[1].value,unit:d.children[2].value})).filter(x=>x.name);
+ let r={id:editingRecipe||crypto.randomUUID(),name,style:$('rstyle').value,volume:+$('rvol').value,og:+$('rog').value,fg:+$('rfg').value,ibu:+$('ribu').value,yeast:$('ryeast').value,notes:$('rnotes').value,ingredients,updated:new Date().toISOString()};
+ let i=db.recipes.findIndex(x=>x.id===r.id);if(i>=0)db.recipes[i]=r;else db.recipes.unshift(r);save();showTab('recetas');toast('Receta guardada')}
+function renderRecipes(){let el=$('recipeList');if(!db.recipes.length){el.innerHTML='<div class="empty">Aún no tienes recetas.<br>Presiona “Crear” para comenzar.</div>';return}
+ el.innerHTML=db.recipes.map(r=>`<div class="card"><div class="row between"><div class="grow"><h3>${esc(r.name)}</h3><span class="pill">${esc(r.style||'Sin estilo')}</span></div><strong>${r.volume||'—'} L</strong></div><p class="muted">OG ${Number(r.og||0).toFixed(3)} · FG ${Number(r.fg||0).toFixed(3)} · ${r.ibu||0} IBU · ${r.ingredients.length} ingredientes</p><div class="actions"><button class="smallbtn" onclick="editRecipe('${r.id}')">Editar</button><button class="secondary smallbtn" onclick="duplicateRecipe('${r.id}')">Duplicar</button><button class="secondary smallbtn" onclick="startBatch('${r.id}')">Crear lote</button><button class="danger smallbtn" onclick="deleteRecipe('${r.id}')">Eliminar</button></div></div>`).join('')}
+function editRecipe(id){recipeForm(db.recipes.find(x=>x.id===id))}
+function duplicateRecipe(id){let r=structuredClone(db.recipes.find(x=>x.id===id));r.id=null;r.name+=' - copia';recipeForm(r)}
+function deleteRecipe(id){if(confirm('¿Eliminar esta receta?')){db.recipes=db.recipes.filter(x=>x.id!==id);save()}}
+function batchForm(b={}){editingBatch=b.id||null;$('lotes').innerHTML=`<div class="section-title"><h2>${b.id?'Editar lote':'Nuevo lote'}</h2><button class="secondary smallbtn" onclick="showTab('lotes')">Volver</button></div><div class="card">
+ <label>Nombre del lote</label><input id="bname" value="${esc(b.name||'')}" placeholder="Ej. NEIPA noviembre 2026">
+ <label>Receta asociada</label><select id="brecipe"><option value="">Sin receta asociada</option>${db.recipes.map(r=>`<option value="${r.id}" ${b.recipeId===r.id?'selected':''}>${esc(r.name)}</option>`).join('')}</select>
+ <div class="grid2"><div><label>Fecha de elaboración</label><input id="bdate" type="date" value="${b.date||new Date().toISOString().slice(0,10)}"></div><div><label>Volumen (L)</label><input id="bvol" type="number" value="${b.volume??20}"></div></div>
+ <div class="grid2"><div><label>Estado</label><select id="bstatus"><option ${b.status==='Fermentando'?'selected':''}>Fermentando</option><option ${b.status==='Madurando'?'selected':''}>Madurando</option><option ${b.status==='Carbonatando'?'selected':''}>Carbonatando</option><option ${b.status==='Terminado'?'selected':''}>Terminado</option></select></div><div><label>Presión (PSI)</label><input id="bpressure" type="number" step=".5" value="${b.pressure??0}"></div></div>
+ <div class="grid2"><div><label>Temperatura actual (°C)</label><input id="btemp" type="number" step=".1" value="${b.temp??0}"></div><div><label>Densidad actual (SG)</label><input id="bsg" type="number" step=".001" value="${b.sg??''}" placeholder="1.012"></div></div>
+ <label>Notas</label><textarea id="bnotes">${esc(b.notes||'')}</textarea></div>
+ <div class="card"><div class="row between"><h3>Registro de mediciones</h3><button class="secondary smallbtn" onclick="addLog()">＋ Medición</button></div><div id="logs"></div></div>
+ <div class="actions"><button class="gold" onclick="saveBatch()">Guardar lote</button><button class="secondary" onclick="showTab('lotes')">Cancelar</button></div>`;
+ (b.logs||[]).forEach(addLog)}
+function addLog(v={date:new Date().toISOString().slice(0,10),sg:'',temp:'',pressure:'',note:''}){let d=document.createElement('div');d.className='card';d.style.background='#fbf7f1';d.innerHTML=`<div class="grid2"><div><label>Fecha</label><input type="date" value="${v.date}"></div><div><label>Densidad SG</label><input type="number" step=".001" value="${v.sg}" placeholder="1.020"></div><div><label>Temperatura °C</label><input type="number" step=".1" value="${v.temp}"></div><div><label>Presión PSI</label><input type="number" step=".5" value="${v.pressure}"></div></div><label>Observación</label><input value="${esc(v.note)}" placeholder="Actividad, aroma, espuma..."><button class="secondary smallbtn" onclick="this.parentElement.remove()">Quitar medición</button>`;$('logs').appendChild(d)}
+function newBatch(){batchForm();showTab('lotes')}
+function startBatch(id){let r=db.recipes.find(x=>x.id===id);batchForm({name:r.name+' - lote '+(db.batches.length+1),recipeId:id,volume:r.volume,status:'Fermentando'});showTab('lotes')}
+function saveBatch(){let name=$('bname').value.trim();if(!name){toast('Escribe un nombre para el lote');return}
+ let logs=[...$('logs').children].map(d=>{let x=d.querySelectorAll('input');return {date:x[0].value,sg:x[1].value,temp:x[2].value,pressure:x[3].value,note:x[4].value}});
+ let b={id:editingBatch||crypto.randomUUID(),name,recipeId:$('brecipe').value,date:$('bdate').value,volume:+$('bvol').value,status:$('bstatus').value,pressure:+$('bpressure').value,temp:+$('btemp').value,sg:$('bsg').value,notes:$('bnotes').value,logs};
+ let i=db.batches.findIndex(x=>x.id===b.id);if(i>=0)db.batches[i]=b;else db.batches.unshift(b);save();showTab('lotes');toast('Lote guardado')}
+function renderBatches(){let el=$('batchList');if(!db.batches.length){el.innerHTML='<div class="empty">Todavía no has registrado lotes.</div>';return}
+ el.innerHTML=db.batches.map(b=>`<div class="card"><div class="row between"><div class="grow"><h3>${esc(b.name)}</h3><span class="pill">${esc(b.status)}</span></div><strong>${b.volume||'—'} L</strong></div><p class="muted">${b.date||''} · ${esc(db.recipes.find(r=>r.id===b.recipeId)?.name||'Sin receta')}<br>Temp. ${b.temp||'—'} °C · ${b.sg||'—'} SG · ${b.pressure||0} PSI · ${b.logs.length} mediciones</p><div class="actions"><button class="smallbtn" onclick="editBatch('${b.id}')">Ver / editar</button><button class="danger smallbtn" onclick="deleteBatch('${b.id}')">Eliminar</button></div></div>`).join('')}
+function editBatch(id){batchForm(db.batches.find(x=>x.id===id));showTab('lotes')}
+function deleteBatch(id){if(confirm('¿Eliminar este lote?')){db.batches=db.batches.filter(x=>x.id!==id);save()}}
+function render(){if(!$('recipeList'))return;renderRecipes();renderBatches();$('statRecipes').textContent=db.recipes.length;$('statBatches').textContent=db.batches.length;$('statActive').textContent=db.batches.filter(x=>x.status!=='Terminado').length;$('statStyles').textContent=new Set(db.recipes.map(x=>x.style).filter(Boolean)).size;
+ let recent=[...db.recipes.map(x=>({t:'Receta',n:x.name,d:x.updated||''})),...db.batches.map(x=>({t:'Lote',n:x.name,d:x.date||''}))].sort((a,b)=>(b.d||'').localeCompare(a.d||'')).slice(0,4);
+ $('recent').innerHTML=recent.length?recent.map(x=>`<div class="item"><strong>${esc(x.n)}</strong><div class="muted">${x.t} · ${x.d.slice(0,10)}</div></div>`).join(''):'Todavía no hay registros. Crea tu primera receta.'}
+function exportData(){let blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='respaldo-mi-cerveceria-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href);toast('Respaldo exportado')}
+function importData(e){let f=e.target.files[0];if(!f)return;let rd=new FileReader();rd.onload=()=>{try{let x=JSON.parse(rd.result);if(!Array.isArray(x.recipes)||!Array.isArray(x.batches))throw 0;if(confirm('Esto reemplazará los datos actuales. ¿Continuar?')){db=x;save();toast('Respaldo importado')}}catch(_){alert('El archivo no parece ser un respaldo válido.')}};rd.readAsText(f);e.target.value=''}
+function clearData(){if(confirm('¿Seguro? Se borrarán todas las recetas y lotes guardados en este navegador.')){db={recipes:[],batches:[]};save();toast('Datos borrados')}}
+function calc(){let og=+$('og').value,fg=+$('fg').value;$('abv').textContent=(((og-fg)*131.25)||0).toFixed(1).replace('.',',')+'%';
+ let t=+$('temp').value,v=+$('vol').value;let c=-0.0107*t*t+0.33955*t+13.7;let psi=(-16.6999-0.0101059*t+0.00116512*t*t+0.173354*t*c+4.24267*c-0.0684226*c*c); // not used: use standard equilibrium approximation
+ let p=(v-0.0000001); // calculate from common Zahm-Nagel polynomial inverse approximation
+ let pressure=-16.6999-0.0101059*t+0.00116512*t*t+0.173354*t*v+4.24267*v-0.0684226*v*v;
+ $('psi').textContent=Math.max(0,pressure).toFixed(1).replace('.',',')+' PSI';
+ let b=+$('brix').value,sg=1+(b/(258.6-((b/258.2)*227.1)));$('sg').textContent=sg.toFixed(3)}
+['og','fg','temp','vol','brix'].forEach(id=>$(id).addEventListener('input',calc));calc();render();
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+</script>
+</body></html>
